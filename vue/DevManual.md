@@ -6,6 +6,7 @@ This document provides development guidance for extending the Infinite Image Bro
 
 - [Page Layout Structure](#page-layout-structure)
 - [Adding Toolbar Buttons](#adding-toolbar-buttons)
+- [Example: File Name Filter Feature](#example-file-name-filter-feature)
 - [Internationalization](#internationalization)
 - [State Management](#state-management)
 - [API Integration](#api-integration)
@@ -123,6 +124,189 @@ export const zhHant = {
   yourButtonLabel: '繁體中文標籤',
 }
 ```
+
+---
+
+## Example: File Name Filter Feature
+
+A complete example of adding a "File Name Filter" button that filters images by regex pattern matching on filenames.
+
+### Feature Description
+
+The file name filter feature allows users to:
+1. Click a filter button in the toolbar
+2. Enter a regular expression pattern in a modal dialog
+3. See only files whose names match the pattern
+
+### Implementation Components
+
+#### 1. Backend Filter Logic (`hooks/index.tsx`)
+
+Add state and filter functions to the shared state hook:
+
+```typescript
+// Add regex state
+const fileNameFilterRegex = ref<RegExp | null>(null)
+
+// Apply filter in sortedFiles computed property
+const applyFileNameFilter = (files: FileNodeInfo[]) => {
+  if (!fileNameFilterRegex.value) {
+    return files
+  }
+  return files.filter((file) => {
+    return fileNameFilterRegex.value.test(file.name) || fileNameFilterRegex.value.test(file.fullpath)
+  })
+}
+
+// In sortedFiles computation:
+const filteredByType = filter(files)
+const sorted = sortFiles(filteredByType, method)
+const filteredByDeleted = sorted.filter(v => !deletedFiles.has(v.fullpath))
+return applyFileNameFilter(filteredByDeleted)
+
+// Export control functions
+const setFileNameFilterRegex = (pattern: string) => {
+  if (!pattern || pattern.trim() === '') {
+    fileNameFilterRegex.value = null
+  } else {
+    try {
+      fileNameFilterRegex.value = new RegExp(pattern, 'i')
+    } catch (e) {
+      console.error('Invalid regex pattern:', pattern, e)
+      fileNameFilterRegex.value = null
+    }
+  }
+}
+
+const getFileNameFilterPattern = () => {
+  return fileNameFilterRegex.value?.source ?? ''
+}
+
+const clearFileNameFilter = () => {
+  fileNameFilterRegex.value = null
+}
+
+const isFileNameFilterActive = computed(() => {
+  return fileNameFilterRegex.value !== null
+})
+```
+
+#### 2. UI Components (`stackView.vue`)
+
+**Add button in toolbar:**
+```vue
+<a class="opt" @click.prevent="onShowFileNameFilter" :class="{ 'filter-active': isFilterActive }" :title="$t('fileNameFilter')">
+  <filter-outlined /> {{ $t('fileNameFilter') }}
+</a>
+```
+
+**Add modal dialog:**
+```vue
+<a-modal
+  v-model:visible="showFileNameFilter"
+  :title="$t('fileNameFilter')"
+  :ok-text="$t('apply')"
+  :cancel-text="$t('cancel')"
+  @ok="applyFileNameFilter"
+  @cancel="cancelFileNameFilter"
+  :destroy-on-close="true"
+>
+  <div>
+    <p>{{ $t('fileNameFilterHint') }}</p>
+    <a-input
+      v-model:value="fileNameFilterInput"
+      :placeholder="$t('fileNameFilterPlaceholder')"
+      @press-enter="applyFileNameFilter"
+      allow-clear
+    >
+      <template #prefix>
+        <filter-outlined />
+      </template>
+    </a-input>
+    <div class="filter-examples">
+      <div>{{ $t('fileNameFilterExamples') }}:</div>
+      <div><code>portrait</code> - {{ $t('fileNameFilterExampleMatch') }}</div>
+      <div><code>^2024</code> - {{ $t('fileNameFilterExampleStart') }}</div>
+      <div><code>\.png$</code> - {{ $t('fileNameFilterExampleEnd') }}</div>
+      <div><code>portrait|landscape</code> - {{ $t('fileNameFilterExampleOr') }}</div>
+    </div>
+  </div>
+</a-modal>
+```
+
+**Add handler functions:**
+```typescript
+import { FilterOutlined } from '@/icon'
+import { computed, ref } from 'vue'
+
+const fileNameFilterInput = ref('')
+const showFileNameFilter = ref(false)
+
+const { setFileNameFilterRegex, getFileNameFilterPattern, clearFileNameFilter, isFileNameFilterActive } = useHookShareState().toRefs()
+
+const onShowFileNameFilter = () => {
+  showFileNameFilter.value = true
+  fileNameFilterInput.value = getFileNameFilterPattern.value() || ''
+}
+
+const applyFileNameFilter = () => {
+  const pattern = fileNameFilterInput.value.trim()
+  if (pattern) {
+    setFileNameFilterRegex.value(pattern)
+  } else {
+    clearFileNameFilter.value()
+  }
+  showFileNameFilter.value = false
+}
+
+const cancelFileNameFilter = () => {
+  showFileNameFilter.value = false
+  fileNameFilterInput.value = ''
+}
+
+const clearFileNameFilterBtn = () => {
+  clearFileNameFilter.value()
+  fileNameFilterInput.value = ''
+}
+
+const isFilterActive = computed(() => isFileNameFilterActive.value)
+```
+
+#### 3. Styling
+
+```scss
+.filter-active {
+  color: var(--primary-color) !important;
+  font-weight: 500;
+}
+```
+
+#### 4. Internationalization
+
+Add translations to all language files (`zh-hans.ts`, `en.ts`, `de.ts`, `zh-hant.ts`):
+
+```typescript
+{
+  fileNameFilter: 'File Name Filter',
+  fileNameFilterHint: 'Enter a regular expression to filter filenames...',
+  fileNameFilterPlaceholder: 'Enter a regex pattern, e.g., portrait',
+  fileNameFilterExamples: 'Examples',
+  fileNameFilterExampleMatch: 'Matches filenames containing "portrait"',
+  fileNameFilterExampleStart: 'Matches filenames starting with "2024"',
+  fileNameFilterExampleEnd: 'Matches filenames ending with ".png"',
+  fileNameFilterExampleOr: 'Matches filenames containing "portrait" or "landscape"',
+  apply: 'Apply',
+}
+```
+
+### Key Points
+
+1. **Filter Timing**: The filter is applied AFTER sorting and type filtering, but BEFORE rendering
+2. **Regex Validation**: Invalid regex patterns are caught and don't break the app
+3. **State Management**: Filter state is stored in the shared hook state for reactive updates
+4. **Performance**: Filtering happens in a computed property, so it's cached and only recalculated when dependencies change
+
+---
 
 #### Complete Example: Export Current Folder Button
 
