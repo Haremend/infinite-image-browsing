@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined, FilterOutlined } from '@/icon'
+import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined, FilterOutlined, UnorderedListOutlined, AppstoreOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useTiktokStore } from '@/store/useTiktokStore'
 import {
@@ -24,6 +24,7 @@ import 'multi-nprogress/nprogress.css'
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import FileItem from '@/components/FileItem.vue'
+import ListView from '@/components/ListView.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import BaseFileListInfo from '@/components/BaseFileListInfo.vue'
 import { copy2clipboardI18n } from '@/util'
@@ -328,6 +329,10 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
           </div>
         </div>
         <div class="actions">
+          <a class="opt view-toggle" @click.prevent="global.viewMode = global.viewMode === 'grid' ? 'list' : 'grid'" :title="global.viewMode === 'grid' ? $t('listView') : $t('gridView')">
+            <UnorderedListOutlined v-if="global.viewMode === 'grid'" />
+            <AppstoreOutlined v-else />
+          </a>
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a class="opt" @click.prevent="onTiktokViewClick">{{ $t('TikTok View') }}</a>
           <a class="opt" @click.prevent="openSmartOrganizeConfig(currLocation)" :title="$t('smartOrganizeHint')">{{ $t('smartOrganize') }}</a>
@@ -422,35 +427,57 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
         </div>
       </div>
       <div v-if="currPage" class="view">
-        <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
-          :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second"
-          :gridItems="gridItems">
-          <template v-slot="{ item: file, index: idx }">
-            <!-- idx 和file有可能丢失 -->
-            <file-item :idx="parseInt(idx)" :file="file"
-              :full-screen-preview-image-url="sortedFiles[previewIdx] ? toImageUrl(sortedFiles[previewIdx]) : ''"
-              v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
-              @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
-              @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
-              @drop-to-folder="onDropToFolder"
-              @tiktok-view="(_file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
-              :is-selected-mutil-files="multiSelectedIdxs.length > 1"
-              :enable-change-indicator="changeIndchecked"
-              :seed-change-checked="seedChangeChecked"
-              :get-gen-diff="getGenDiff"
-              :get-gen-diff-watch-dep="getGenDiffWatchDep"
-              :previewing="previewing"
-              :cover-files="dirCoverCache.get(file.fullpath)"/>
-          </template>
-          <template #after>
-            <div style="padding: 16px 0 512px;">
-              <AButton v-if="props.mode === 'walk'" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
-                :disabled="!canLoadNext" ghost>
-                {{ $t('loadNextPage') }}</AButton>
-            </div>
-          </template>
+        <!-- Grid View -->
+        <template v-if="global.viewMode === 'grid'">
+          <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
+            :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second"
+            :gridItems="gridItems">
+            <template v-slot="{ item: file, index: idx }">
+              <!-- idx 和file有可能丢失 -->
+              <file-item :idx="parseInt(idx)" :file="file"
+                :full-screen-preview-image-url="sortedFiles[previewIdx] ? toImageUrl(sortedFiles[previewIdx]) : ''"
+                v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
+                @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
+                @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
+                @drop-to-folder="onDropToFolder"
+                @tiktok-view="(_file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
+                :is-selected-mutil-files="multiSelectedIdxs.length > 1"
+                :enable-change-indicator="changeIndchecked"
+                :seed-change-checked="seedChangeChecked"
+                :get-gen-diff="getGenDiff"
+                :get-gen-diff-watch-dep="getGenDiffWatchDep"
+                :previewing="previewing"
+                :cover-files="dirCoverCache.get(file.fullpath)"/>
+            </template>
+            <template #after>
+              <div style="padding: 16px 0 512px;">
+                <AButton v-if="props.mode === 'walk'" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
+                  :disabled="!canLoadNext" ghost>
+                  {{ $t('loadNextPage') }}</AButton>
+              </div>
+            </template>
+          </RecycleScroller>
+        </template>
 
-        </RecycleScroller>
+        <!-- List View -->
+        <template v-else>
+          <ListView
+            :files="sortedFiles"
+            :sort-method="sortMethod"
+            @update:sort-method="(v) => sortMethod = v"
+            @file-item-click="onFileItemClick"
+            @dragstart="onFileDragStart"
+            @dragend="onFileDragEnd"
+            @context-menu-click="onContextMenuClick"
+            @drop-to-folder="onDropToFolder"
+          />
+          <div style="padding: 16px 0;">
+            <AButton v-if="props.mode === 'walk'" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
+              :disabled="!canLoadNext" ghost>
+              {{ $t('loadNextPage') }}</AButton>
+          </div>
+        </template>
+
         <div v-if="previewing" class="preview-switch">
           <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
           <RightCircleOutlined @click="previewImgMove('next')" :class="{ disable: !canPreview('next') }" />
@@ -573,6 +600,18 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
 
   a.opt {
     margin-left: 8px;
+  }
+
+  a.opt.view-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--zp-primary-color, #d03f0a);
+    }
   }
 }
 

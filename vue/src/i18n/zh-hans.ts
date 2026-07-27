@@ -629,4 +629,9 @@ export const zhHans = {
   trendNoData: '暂无数据，请先生成索引',
   trendHeatmapLess: '少',
   trendHeatmapMore: '多',
+
+  // ===== List View =====
+  modifiedDate: '修改日期',
+  listView: '列表视图',
+  gridView: '网格视图',
 }

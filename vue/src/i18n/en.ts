@@ -651,4 +651,9 @@ You can specify which snapshot to restore to when starting IIB in the global set
   trendNoData: 'No data yet, please generate index first',
   trendHeatmapLess: 'Less',
   trendHeatmapMore: 'More',
+
+  // ===== List View =====
+  modifiedDate: 'Modified Date',
+  listView: 'List View',
+  gridView: 'Grid View',
 }

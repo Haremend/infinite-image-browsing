@@ -168,6 +168,8 @@ export type Shortcut = Record<`toggle_tag_${string}` | 'delete' | 'download' | `
 
 export type DefaultInitinalPage = `workspace_snapshot_${string}` | 'empty' | 'last-workspace-state'
 
+export type ViewMode = 'grid' | 'list'
+
 export type FullscreenMenuBlockVisibility = {
   actionBar: boolean
   infoTags: boolean
@@ -233,6 +235,7 @@ export const presistKeys = [
   'batchDownloadCompress',
   'batchDownloadPackOnly',
   'magicSwitchTiktokView',
+  'viewMode',
   'showRandomImageInStartup',
   'showRecentInStartup',
   'showTiktokNavigator',
@@ -389,6 +392,7 @@ export const useGlobalStore = defineStore(
     }
     const previewBgOpacity = ref(0.6)
     const magicSwitchTiktokView = ref(false)
+    const viewMode = ref<ViewMode>('grid')
     const showRandomImageInStartup = ref(true)
     const showRecentInStartup = ref(true)
     const showTiktokNavigator = ref(false)
@@ -487,6 +491,7 @@ export const useGlobalStore = defineStore(
       batchDownloadCompress: ref(false),
       batchDownloadPackOnly: ref(false),
       magicSwitchTiktokView,
+      viewMode,
       showRandomImageInStartup,
       showRecentInStartup,
       autoUpdateIndex: ref(true),

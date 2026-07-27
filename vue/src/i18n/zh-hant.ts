@@ -631,4 +631,9 @@ export const zhHant: Partial<IIBI18nMap> = {
   trendNoData: '暫無數據，請先生成索引',
   trendHeatmapLess: '少',
   trendHeatmapMore: '多',
+
+  // ===== List View =====
+  modifiedDate: '修改日期',
+  listView: '列表檢視',
+  gridView: '網格檢視',
 }

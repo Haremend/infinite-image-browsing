@@ -59,6 +59,7 @@ declare module '@vue/runtime-core' {
     FileItem: typeof import('./src/components/FileItem.vue')['default']
     HistoryRecord: typeof import('./src/components/HistoryRecord.vue')['default']
     KvPairEditor: typeof import('./src/components/KvPairEditor.vue')['default']
+    ListView: typeof import('./src/components/ListView.vue')['default']
     MultiSelectKeep: typeof import('./src/components/MultiSelectKeep.vue')['default']
     NumInput: typeof import('./src/components/numInput.vue')['default']
     OrganizeJobsPanel: typeof import('./src/components/OrganizeJobsPanel.vue')['default']

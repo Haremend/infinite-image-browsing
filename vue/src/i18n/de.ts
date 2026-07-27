@@ -392,4 +392,9 @@ export const de: Partial<IIBI18nMap> = {
   fileNameFilterExampleEnd: 'Dateinamen endend mit ".png"',
   fileNameFilterExampleOr: 'Dateinamen mit "portrait" oder "landscape"',
   apply: 'Anwenden',
+
+  // ===== List View =====
+  modifiedDate: 'Änderungsdatum',
+  listView: 'Listenansicht',
+  gridView: 'Rasteransicht',
 }

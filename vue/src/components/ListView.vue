@@ -1,0 +1,348 @@
+<script setup lang="ts">
+// @ts-ignore
+import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
+import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import { useTagStore } from '@/store/useTagStore'
+import { FileNodeInfo } from '@/api/files'
+import { isImageFile, isVideoFile, isAudioFile } from '@/util/file'
+import { SortMethod } from '@/page/fileTransfer/fileSort'
+import { ref, computed } from 'vue'
+import {
+  FileOutlined,
+  FolderOpenOutlined,
+  CaretUpOutlined,
+  CaretDownOutlined,
+  PictureOutlined,
+  VideoCameraOutlined,
+  SoundOutlined
+} from '@/icon'
+import ContextMenu from './ContextMenu.vue'
+import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
+
+const tagStore = useTagStore()
+
+const props = defineProps<{
+  files: FileNodeInfo[]
+  sortMethod: SortMethod
+  cellWidth?: number
+}>()
+
+const emit = defineEmits<{
+  'fileItemClick': [event: MouseEvent, file: FileNodeInfo, idx: number]
+  'contextMenuClick': [e: MenuInfo, file: FileNodeInfo, idx: number]
+  'dragstart': [event: DragEvent, idx: number]
+  'dragend': [event: DragEvent, idx: number]
+  'dropToFolder': [event: DragEvent, file: FileNodeInfo, idx: number]
+  'update:sortMethod': [method: SortMethod]
+}>()
+
+const ITEM_HEIGHT = 36
+const showMenuIdx = ref(-1)
+
+type SortField = 'name' | 'date' | 'size'
+type SortOrder = 'asc' | 'desc'
+
+// Derive sort field and order from current sortMethod
+const sortInfo = computed(() => {
+  const m = props.sortMethod
+  if (m.startsWith('name-')) return { field: 'name' as SortField, order: m.endsWith('asc') ? 'asc' as SortOrder : 'desc' as SortOrder }
+  if (m.startsWith('date-')) return { field: 'date' as SortField, order: m.endsWith('asc') ? 'asc' as SortOrder : 'desc' as SortOrder }
+  if (m.startsWith('size-')) return { field: 'size' as SortField, order: m.endsWith('asc') ? 'asc' as SortOrder : 'desc' as SortOrder }
+  if (m.startsWith('created-time-')) return { field: 'date' as SortField, order: m.endsWith('asc') ? 'asc' as SortOrder : 'desc' as SortOrder }
+  return { field: null, order: 'asc' as SortOrder }
+})
+
+const onColumnClick = (field: SortField) => {
+  const currentInfo = sortInfo.value
+  if (currentInfo.field === field) {
+    // Toggle order
+    const newOrder = currentInfo.order === 'asc' ? 'desc' : 'asc'
+    emit('update:sortMethod', `${field}-${newOrder}` as SortMethod)
+  } else {
+    // Set new field with default ascending
+    emit('update:sortMethod', `${field}-asc` as SortMethod)
+  }
+}
+
+const getSortIcon = (field: SortField) => {
+  const info = sortInfo.value
+  if (info.field !== field) return 'none'
+  return info.order
+}
+
+const getFileIcon = (file: FileNodeInfo) => {
+  if (file.type === 'dir') return 'folder'
+  if (isImageFile(file.name)) return 'image'
+  if (isVideoFile(file.name)) return 'video'
+  if (isAudioFile(file.name)) return 'audio'
+  return 'file'
+}
+
+const handleDrop = (event: DragEvent, file: FileNodeInfo, idx: number) => {
+  if (file.type === 'dir') {
+    event.preventDefault()
+    event.stopPropagation()
+    emit('dropToFolder', event, file, idx)
+  }
+}
+
+const handleDragOver = (event: DragEvent, file: FileNodeInfo) => {
+  if (file.type === 'dir') {
+    event.preventDefault()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move'
+    }
+  }
+}
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+}
+
+</script>
+
+<template>
+  <div class="list-view-container">
+    <!-- Column Headers -->
+    <div class="list-header">
+      <div class="col-icon"></div>
+      <div class="col-name sortable" @click="onColumnClick('name')">
+        <span class="col-label">{{ $t('fileName') }}</span>
+        <span class="sort-icon" :class="{ active: getSortIcon('name') !== 'none' }">
+          <CaretUpOutlined v-if="getSortIcon('name') === 'asc'" />
+          <CaretDownOutlined v-if="getSortIcon('name') === 'desc'" />
+        </span>
+      </div>
+      <div class="col-date sortable" @click="onColumnClick('date')">
+        <span class="col-label">{{ $t('modifiedDate') }}</span>
+        <span class="sort-icon" :class="{ active: getSortIcon('date') !== 'none' }">
+          <CaretUpOutlined v-if="getSortIcon('date') === 'asc'" />
+          <CaretDownOutlined v-if="getSortIcon('date') === 'desc'" />
+        </span>
+      </div>
+      <div class="col-size sortable" @click="onColumnClick('size')">
+        <span class="col-label">{{ $t('fileSize') }}</span>
+        <span class="sort-icon" :class="{ active: getSortIcon('size') !== 'none' }">
+          <CaretUpOutlined v-if="getSortIcon('size') === 'asc'" />
+          <CaretDownOutlined v-if="getSortIcon('size') === 'desc'" />
+        </span>
+      </div>
+    </div>
+
+    <!-- File List -->
+    <RecycleScroller
+      class="list-body"
+      :items="files"
+      :item-size="ITEM_HEIGHT"
+      key-field="fullpath"
+    >
+      <template v-slot="{ item: file, index: idx }">
+        <a-dropdown
+          :trigger="['contextmenu']"
+          :visible="showMenuIdx === idx"
+          @update:visible="(v: boolean) => showMenuIdx = v ? idx : -1"
+        >
+          <div
+            class="list-row file-item-trigger"
+            :class="{ 'is-dir': file.type === 'dir' }"
+            :data-idx="idx"
+            draggable="true"
+            @dragstart="emit('dragstart', $event, idx)"
+            @dragend="emit('dragend', $event, idx)"
+            @dragover="handleDragOver($event, file)"
+            @drop="handleDrop($event, file, idx)"
+            @click="emit('fileItemClick', $event, file, idx)"
+          >
+            <div class="col-icon">
+              <folder-open-outlined v-if="getFileIcon(file) === 'folder'" class="file-icon folder-icon" />
+              <picture-outlined v-else-if="getFileIcon(file) === 'image'" class="file-icon image-icon" />
+              <video-camera-outlined v-else-if="getFileIcon(file) === 'video'" class="file-icon video-icon" />
+              <sound-outlined v-else-if="getFileIcon(file) === 'audio'" class="file-icon audio-icon" />
+              <file-outlined v-else class="file-icon" />
+            </div>
+            <div class="col-name" :title="file.name">
+              <span class="file-name-text">{{ file.name }}</span>
+              <div class="tags-inline" v-if="file.type !== 'dir'">
+                <a-tag
+                  v-for="tag in (tagStore.tagMap.get(file.fullpath) ?? [])"
+                  :key="tag.id"
+                  :color="tagStore.getColor(tag)"
+                  class="inline-tag"
+                >
+                  {{ tag.name }}
+                </a-tag>
+              </div>
+            </div>
+            <div class="col-date">{{ file.date }}</div>
+            <div class="col-size">{{ file.type === 'dir' ? '--' : formatFileSize(file.bytes) }}</div>
+          </div>
+          <template #overlay>
+            <context-menu
+              :file="file"
+              :idx="idx"
+              :selected-tag="tagStore.tagMap.get(file.fullpath) ?? []"
+              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+            />
+          </template>
+        </a-dropdown>
+      </template>
+    </RecycleScroller>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.list-view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--zp-primary-background);
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 36px;
+  background: var(--zp-secondary-background);
+  border-bottom: 2px solid var(--zp-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--zp-primary);
+  user-select: none;
+  flex-shrink: 0;
+
+  .sortable {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--zp-secondary-variant-background);
+    }
+
+    .sort-icon {
+      font-size: 12px;
+      opacity: 0.3;
+      transition: opacity 0.15s;
+
+      &.active {
+        opacity: 1;
+        color: var(--zp-primary-color, #d03f0a);
+      }
+    }
+  }
+}
+
+.list-body {
+  flex: 1;
+  overflow: auto;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 36px;
+  border-bottom: 1px solid var(--zp-border);
+  cursor: default;
+  transition: background 0.1s;
+  font-size: 13px;
+
+  &:hover {
+    background: var(--zp-secondary-variant-background);
+  }
+
+  &.is-dir {
+    cursor: pointer;
+    font-weight: 500;
+  }
+}
+
+.col-icon {
+  width: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .file-icon {
+    font-size: 18px;
+    color: var(--zp-secondary);
+  }
+
+  .folder-icon {
+    color: #f5c542;
+  }
+
+  .image-icon {
+    color: #4caf50;
+  }
+
+  .video-icon {
+    color: #e91e63;
+  }
+
+  .audio-icon {
+    color: #9c27b0;
+  }
+}
+
+.col-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+
+  .file-name-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .tags-inline {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    .inline-tag {
+      margin: 0;
+      font-size: 11px;
+      line-height: 18px;
+      padding: 0 6px;
+      border-radius: 3px;
+    }
+  }
+}
+
+.col-date {
+  width: 170px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 12px;
+  font-size: 12px;
+  color: var(--zp-secondary);
+}
+
+.col-size {
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--zp-secondary);
+}
+
+.col-label {
+  font-size: 13px;
+}
+</style>
