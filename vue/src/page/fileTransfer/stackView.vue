@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined } from '@/icon'
+import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined, FilterOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useTiktokStore } from '@/store/useTiktokStore'
 import {
@@ -34,9 +34,13 @@ import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
 import { openSmartOrganizeConfig } from '@/util/smartOrganize'
 import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
-import { h, ref, watch, onMounted, nextTick } from 'vue'
+import { h, ref, watch, onMounted, nextTick, computed } from 'vue'
 import { openImageFullscreenPreview } from '@/util/imagePreviewOperation'
 import { normalize } from '@/util/path'
+
+// 文件名过滤相关
+const fileNameFilterInput = ref('') // 用于 v-model 绑定输入框
+const showFileNameFilter = ref(false) // 控制输入框显示/隐藏
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -243,6 +247,42 @@ onMounted(() => {
   })
 })
 
+// ===== 文件名过滤相关处理 =====
+// 从 useHookShareState 获取过滤方法
+const { setFileNameFilterRegex, getFileNameFilterPattern, clearFileNameFilter, isFileNameFilterActive } = useHookShareState().toRefs()
+
+// 显示文件名过滤输入框
+const onShowFileNameFilter = () => {
+  showFileNameFilter.value = true
+  fileNameFilterInput.value = getFileNameFilterPattern.value() || ''
+}
+
+// 应用文件名过滤
+const applyFileNameFilter = () => {
+  const pattern = fileNameFilterInput.value.trim()
+  if (pattern) {
+    setFileNameFilterRegex.value(pattern)
+  } else {
+    clearFileNameFilter.value()
+  }
+  showFileNameFilter.value = false
+}
+
+// 取消文件名过滤
+const cancelFileNameFilter = () => {
+  showFileNameFilter.value = false
+  fileNameFilterInput.value = ''
+}
+
+// 清除当前过滤器
+const clearFileNameFilterBtn = () => {
+  clearFileNameFilter.value()
+  fileNameFilterInput.value = ''
+}
+
+// 过滤器是否激活的状态
+const isFilterActive = computed(() => isFileNameFilterActive.value)
+
 
 </script>
 <template>
@@ -291,6 +331,9 @@ onMounted(() => {
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a class="opt" @click.prevent="onTiktokViewClick">{{ $t('TikTok View') }}</a>
           <a class="opt" @click.prevent="openSmartOrganizeConfig(currLocation)" :title="$t('smartOrganizeHint')">{{ $t('smartOrganize') }}</a>
+          <a class="opt" @click.prevent="onShowFileNameFilter" :class="{ 'filter-active': isFilterActive }" :title="$t('fileNameFilter')">
+            <filter-outlined /> {{ $t('fileNameFilter') }}
+          </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('search') }}
@@ -417,6 +460,38 @@ onMounted(() => {
     <fullScreenContextMenu v-if="previewing" :file="sortedFiles[previewIdx]" :idx="previewIdx"
       @context-menu-click="onContextMenuClick" />
     <BaseFileListInfo :file-num="sortedFiles.length" :selected-file-num="multiSelectedIdxs.length" />
+
+    <!-- 文件名过滤 Modal -->
+    <a-modal
+      v-model:visible="showFileNameFilter"
+      :title="$t('fileNameFilter')"
+      :ok-text="$t('apply')"
+      :cancel-text="$t('cancel')"
+      @ok="applyFileNameFilter"
+      @cancel="cancelFileNameFilter"
+      :destroy-on-close="true"
+    >
+      <div>
+        <p>{{ $t('fileNameFilterHint') }}</p>
+        <a-input
+          v-model:value="fileNameFilterInput"
+          :placeholder="$t('fileNameFilterPlaceholder')"
+          @press-enter="applyFileNameFilter"
+          allow-clear
+        >
+          <template #prefix>
+            <filter-outlined />
+          </template>
+        </a-input>
+        <div class="filter-examples" style="margin-top: 12px; font-size: 12px; color: var(--zp-text-secondary);">
+          <div>{{ $t('fileNameFilterExamples') }}:</div>
+          <div><code>portrait</code> - {{ $t('fileNameFilterExampleMatch') }}</div>
+          <div><code>^2024</code> - {{ $t('fileNameFilterExampleStart') }}</div>
+          <div><code>\.png$</code> - {{ $t('fileNameFilterExampleEnd') }}</div>
+          <div><code>portrait|landscape</code> - {{ $t('fileNameFilterExampleOr') }}</div>
+        </div>
+      </div>
+    </a-modal>
   </ASpin>
 </template>
 <style lang="scss" scoped>
@@ -518,5 +593,11 @@ onMounted(() => {
   border: 4px;
   background: var(--zp-secondary-background);
   border: 1px solid var(--zp-border);
+}
+
+// 文件名过滤按钮激活状态
+.filter-active {
+  color: var(--primary-color) !important;
+  font-weight: 500;
 }
 </style>

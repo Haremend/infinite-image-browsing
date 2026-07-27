@@ -597,6 +597,17 @@ export const zhHans = {
   jsonMode: 'JSON',
   delete: '删除',
   keyPlaceholder: 'Key',
+
+  // ===== 文件名过滤 =====
+  fileNameFilter: '文件名过滤',
+  fileNameFilterHint: '输入正则表达式来过滤文件名，只有匹配的文件会被显示',
+  fileNameFilterPlaceholder: '输入正则表达式，例如：portrait',
+  fileNameFilterExamples: '示例',
+  fileNameFilterExampleMatch: '匹配包含 "portrait" 的文件名',
+  fileNameFilterExampleStart: '匹配以 "2024" 开头的文件名',
+  fileNameFilterExampleEnd: '匹配以 ".png" 结尾的文件名',
+  fileNameFilterExampleOr: '匹配包含 "portrait" 或 "landscape" 的文件名',
+  apply: '应用',
   jsonValuePlaceholder: 'JSON Value',
   stringValuePlaceholder: '字符串值',
   clearBeforeSwitchToJson: '切换到 JSON 模式前请先清空当前值',

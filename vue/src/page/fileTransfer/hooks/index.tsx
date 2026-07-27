@@ -37,6 +37,9 @@ export * from './useFileTransfer'
 export * from './useFileItemActions'
 export * from './useGenInfoDiff'
 
+// Note: Filename filter functions are available through useHookShareState().toRefs()
+// Return values include: setFileNameFilterRegex, getFileNameFilterPattern, clearFileNameFilter, isFileNameFilterActive
+
 
 
 export interface Scroller {
@@ -53,6 +56,8 @@ export const { useHookShareState } = createTypedShareStateHook(
     const basePath = computed(() =>
       stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.value.mode !== 'scanned-fixed' ? 1 : 0)
     )
+    // 文件名正则过滤
+    const fileNameFilterRegex = ref<RegExp | null>(null)
     const currLocationScannedOnlyAvailable = computed(() => Path.join(...basePath.value))
     const currLocation = computed(() => {
       if(props.value.mode === 'scanned-fixed') return stack.value?.[0]?.curr ?? ''
@@ -107,7 +112,21 @@ export const { useHookShareState } = createTypedShareStateHook(
           return false
         })
       }
-      return sortFiles(filter(files), method).filter(v => !deletedFiles.has(v.fullpath))
+      // 应用文件名正则过滤
+      const applyFileNameFilter = (files: FileNodeInfo[]) => {
+        if (!fileNameFilterRegex.value) {
+          return files
+        }
+        return files.filter((file) => {
+          // 匹配文件名或完整路径
+          return fileNameFilterRegex.value.test(file.name) || fileNameFilterRegex.value.test(file.fullpath)
+        })
+      }
+      // 先按类型过滤，再排序，最后应用文件名过滤
+      const filteredByType = filter(files)
+      const sorted = sortFiles(filteredByType, method)
+      const filteredByDeleted = sorted.filter(v => !deletedFiles.has(v.fullpath))
+      return applyFileNameFilter(filteredByDeleted)
     })
     const multiSelectedIdxs = ref([] as number[])
     const previewIdx = ref(-1)
@@ -145,7 +164,33 @@ export const { useHookShareState } = createTypedShareStateHook(
       }
       return []
     }
-    
+
+    // 文件名过滤相关方法
+    const setFileNameFilterRegex = (pattern: string) => {
+      if (!pattern || pattern.trim() === '') {
+        fileNameFilterRegex.value = null
+      } else {
+        try {
+          fileNameFilterRegex.value = new RegExp(pattern, 'i') // 不区分大小写
+        } catch (e) {
+          console.error('Invalid regex pattern:', pattern, e)
+          fileNameFilterRegex.value = null
+        }
+      }
+    }
+
+    const getFileNameFilterPattern = () => {
+      return fileNameFilterRegex.value?.source ?? ''
+    }
+
+    const clearFileNameFilter = () => {
+      fileNameFilterRegex.value = null
+    }
+
+    const isFileNameFilterActive = computed(() => {
+      return fileNameFilterRegex.value !== null
+    })
+
     return {
       previewing,
       spinning,
@@ -165,6 +210,10 @@ export const { useHookShareState } = createTypedShareStateHook(
       walker,
       deletedFiles,
       getViewableAreaFiles,
+      setFileNameFilterRegex,
+      getFileNameFilterPattern,
+      clearFileNameFilter,
+      isFileNameFilterActive,
       ...events
     }
   },

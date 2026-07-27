@@ -606,6 +606,17 @@ export const zhHant: Partial<IIBI18nMap> = {
   dragImageToTransfer: '點擊獲取原圖，抓取拖拽至其他應用',
   dragImage: '點擊獲取原圖，抓取拖拽至其他應用',
 
+  // ===== 文件名過濾 =====
+  fileNameFilter: '文件名過濾',
+  fileNameFilterHint: '輸入正則表達式來過濾文件名，只有匹配的文件會被顯示',
+  fileNameFilterPlaceholder: '輸入正則表達式，例如：portrait',
+  fileNameFilterExamples: '示例',
+  fileNameFilterExampleMatch: '匹配包含 "portrait" 的文件名',
+  fileNameFilterExampleStart: '匹配以 "2024" 開頭的文件名',
+  fileNameFilterExampleEnd: '匹配以 ".png" 結尾的文件名',
+  fileNameFilterExampleOr: '匹配包含 "portrait" 或 "landscape" 的文件名',
+  apply: '應用',
+
   // ===== 趨勢面板 =====
   trend: '趨勢',
   trendPanel: '趨勢與統計',

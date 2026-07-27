@@ -626,6 +626,17 @@ You can specify which snapshot to restore to when starting IIB in the global set
   dragImageToTransfer: 'Click to get original image, grab and drag to other apps',
   dragImage: 'Click to get original image, grab and drag to other apps',
 
+  // ===== File Name Filter =====
+  fileNameFilter: 'File Name Filter',
+  fileNameFilterHint: 'Enter a regular expression to filter filenames. Only matching files will be displayed.',
+  fileNameFilterPlaceholder: 'Enter a regex pattern, e.g., portrait',
+  fileNameFilterExamples: 'Examples',
+  fileNameFilterExampleMatch: 'Matches filenames containing "portrait"',
+  fileNameFilterExampleStart: 'Matches filenames starting with "2024"',
+  fileNameFilterExampleEnd: 'Matches filenames ending with ".png"',
+  fileNameFilterExampleOr: 'Matches filenames containing "portrait" or "landscape"',
+  apply: 'Apply',
+
   // ===== Trend Panel =====
   trend: 'Trend',
   trendPanel: 'Trend & Statistics',

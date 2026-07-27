@@ -381,4 +381,15 @@ export const de: Partial<IIBI18nMap> = {
   trendNoData: 'Keine Daten, bitte zuerst Index generieren',
   trendHeatmapLess: 'Weniger',
   trendHeatmapMore: 'Mehr',
+
+  // ===== Dateiname Filter =====
+  fileNameFilter: 'Dateiname Filter',
+  fileNameFilterHint: 'Geben Sie einen regulären Ausdruck ein, um Dateinamen zu filtern. Nur übereinstimmende Dateien werden angezeigt.',
+  fileNameFilterPlaceholder: 'Geben Sie ein Regex-Muster ein, z.B. portrait',
+  fileNameFilterExamples: 'Beispiele',
+  fileNameFilterExampleMatch: 'Übereinstimmende Dateinamen mit "portrait"',
+  fileNameFilterExampleStart: 'Dateinamen beginnend mit "2024"',
+  fileNameFilterExampleEnd: 'Dateinamen endend mit ".png"',
+  fileNameFilterExampleOr: 'Dateinamen mit "portrait" oder "landscape"',
+  apply: 'Anwenden',
 }
