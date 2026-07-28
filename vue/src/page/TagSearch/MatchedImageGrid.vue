@@ -3,7 +3,7 @@ import fileItemCell from '@/components/FileItem.vue'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
-import { toImageUrl } from '@/util/file'
+import { toRawFileUrl } from '@/util/file'
 import { getImagesByTags, type MatchImageByTagsReq } from '@/api/db'
 import { nextTick, watch, ref } from 'vue'
 import { copy2clipboardI18n } from '@/util'
@@ -162,7 +162,7 @@ const onTiktokViewClick = () => {
             @file-item-click="onFileItemClick"
             @tiktok-view="(_file, idx) => openTiktokViewWithFiles(images, idx)"
             :full-screen-preview-image-url="
-              images[previewIdx] ? toImageUrl(images[previewIdx]) : ''
+              images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''
             "
             :selected="multiSelectedIdxs.includes(idx)"
             @context-menu-click="onContextMenuClickU"

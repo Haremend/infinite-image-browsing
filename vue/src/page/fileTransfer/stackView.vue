@@ -16,7 +16,7 @@ import {
   useGenInfoDiff
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
-import { toImageUrl } from '@/util/file'
+import { toRawFileUrl } from '@/util/file'
 import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 
 import 'multi-nprogress/nprogress.css'
@@ -429,7 +429,7 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
             <template v-slot="{ item: file, index: idx }">
               <!-- idx 和file有可能丢失 -->
               <file-item :idx="parseInt(idx)" :file="file"
-                :full-screen-preview-image-url="sortedFiles[previewIdx] ? toImageUrl(sortedFiles[previewIdx]) : ''"
+                :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
                 v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
                 @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
                 @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
@@ -458,7 +458,7 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
           <ListView
             :files="sortedFiles"
             :sort-method="sortMethod"
-            :full-screen-preview-image-url="sortedFiles[previewIdx] ? toImageUrl(sortedFiles[previewIdx]) : ''"
+            :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
             :is-selected-mutil-files="multiSelectedIdxs.length > 1"
             @update:sort-method="(v) => sortMethod = v"
             @file-item-click="onFileItemClick"
