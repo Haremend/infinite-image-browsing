@@ -25,6 +25,8 @@ iib.db-shm
 iib.db-wal
 .cursor/
 
-CLAUDE.md
+# CLAUDE.md
 .claude/*
 videos/*
+
+# vue/dist

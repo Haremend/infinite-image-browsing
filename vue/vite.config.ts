@@ -43,7 +43,8 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/infinite_image_browsing/': {
-        target: 'http://127.0.0.1:7866/'
+        // target: 'https://newspapers-handles-certainly-sympathy.trycloudflare.com/infinite_image_browsing/'
+        target: 'http://127.0.0.1:8000/'
       }
     }
   }

@@ -8,6 +8,7 @@
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
     "build": "tsx build",
+    "build-vite": "vite build",
     "tauri": "tauri dev",
     "tauri-build": "tauri build",
     "tauri-build-debug": "tauri build --debug"
