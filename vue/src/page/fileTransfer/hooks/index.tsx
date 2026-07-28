@@ -114,12 +114,13 @@ export const { useHookShareState } = createTypedShareStateHook(
       }
       // 应用文件名正则过滤
       const applyFileNameFilter = (files: FileNodeInfo[]) => {
-        if (!fileNameFilterRegex.value) {
+        const regex = fileNameFilterRegex.value
+        if (!regex) {
           return files
         }
         return files.filter((file) => {
           // 匹配文件名或完整路径
-          return fileNameFilterRegex.value.test(file.name) || fileNameFilterRegex.value.test(file.fullpath)
+          return regex.test(file.name) || regex.test(file.fullpath)
         })
       }
       // 先按类型过滤，再排序，最后应用文件名过滤

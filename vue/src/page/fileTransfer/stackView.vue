@@ -275,12 +275,6 @@ const cancelFileNameFilter = () => {
   fileNameFilterInput.value = ''
 }
 
-// 清除当前过滤器
-const clearFileNameFilterBtn = () => {
-  clearFileNameFilter.value()
-  fileNameFilterInput.value = ''
-}
-
 // 过滤器是否激活的状态
 const isFilterActive = computed(() => isFileNameFilterActive.value)
 
