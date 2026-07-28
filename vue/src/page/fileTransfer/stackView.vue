@@ -458,12 +458,15 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
           <ListView
             :files="sortedFiles"
             :sort-method="sortMethod"
+            :full-screen-preview-image-url="sortedFiles[previewIdx] ? toImageUrl(sortedFiles[previewIdx]) : ''"
+            :is-selected-mutil-files="multiSelectedIdxs.length > 1"
             @update:sort-method="(v) => sortMethod = v"
             @file-item-click="onFileItemClick"
             @dragstart="onFileDragStart"
             @dragend="onFileDragEnd"
             @context-menu-click="onContextMenuClick"
             @drop-to-folder="onDropToFolder"
+            @preview-visible-change="onPreviewVisibleChange"
           />
           <div style="padding: 16px 0;">
             <AButton v-if="props.mode === 'walk'" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
