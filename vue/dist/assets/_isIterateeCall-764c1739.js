@@ -1,1 +1,0 @@
-import{bh as i,b1 as t,dW as f,b5 as n}from"./index-38691925.js";function u(e,s,r){if(!i(r))return!1;var a=typeof s;return(a=="number"?t(r)&&f(s,r.length):a=="string"&&s in r)?n(r[s],e):!1}export{u as i};
