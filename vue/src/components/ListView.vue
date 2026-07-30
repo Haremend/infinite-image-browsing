@@ -5,7 +5,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useTagStore } from '@/store/useTagStore'
 import { FileNodeInfo } from '@/api/files'
-import { isImageFile, isVideoFile, isAudioFile } from '@/util/file'
+import { isImageFile, isVideoFile, isAudioFile, isMediaFile } from '@/util/file'
 import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import { openVideoModal, openAudioModal } from '@/components/functionalCallableComp'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
@@ -23,7 +23,8 @@ import {
   HeartFilled,
   StarFilled,
   StarOutlined,
-  DragOutlined
+  DragOutlined,
+  EyeOutlined
 } from '@/icon'
 import ContextMenu from './ContextMenu.vue'
 import DraggableImage from './DraggableImage.vue'
@@ -199,6 +200,12 @@ const toggleLikeTag = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
   emit('contextMenuClick', { key: `toggle-tag-${likeTag.value.id}` } as MenuInfo, file, idx)
 }
 
+// ===== 查看元数据（与 more 菜单里的「查看生成信息(prompt等)」按钮功能一致）=====
+const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
+  if (file.type !== 'file' || !isMediaFile(file.name)) return
+  e.stopPropagation()
+  emit('contextMenuClick', { key: 'viewGenInfo' } as MenuInfo, file, idx)
+}
 </script>
 
 <template>
@@ -213,6 +220,7 @@ const toggleLikeTag = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
           <CaretDownOutlined v-if="getSortIcon('name') === 'desc'" />
         </span>
       </div>
+      <div class="col-meta">{{ $t('viewGenerationInfo') }}</div>
       <div class="col-date sortable" @click="onColumnClick('date')">
         <span class="col-label">{{ $t('modifiedDate') }}</span>
         <span class="sort-icon" :class="{ active: getSortIcon('date') !== 'none' }">
@@ -285,6 +293,16 @@ const toggleLikeTag = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
                 >
                   {{ tag.name }}
                 </a-tag>
+              </div>
+            </div>
+            <div class="col-meta" @click.stop>
+              <div
+                v-if="file.type === 'file' && isMediaFile(file.name)"
+                class="action-btn"
+                :title="$t('viewGenerationInfo')"
+                @click="onViewGenInfo(file, idx, $event)"
+              >
+                <eye-outlined />
               </div>
             </div>
             <div class="col-date">{{ file.date }}</div>
@@ -479,6 +497,14 @@ const toggleLikeTag = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
   padding-right: 12px;
   font-size: 12px;
   color: var(--zp-secondary);
+}
+
+.col-meta {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .col-size {

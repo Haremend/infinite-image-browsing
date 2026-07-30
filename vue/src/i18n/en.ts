@@ -393,6 +393,8 @@ You can specify which snapshot to restore to when starting IIB in the global set
   previewInNewWindow: 'Open in new window',
   copySourceFilePreviewLink: 'Copy source file preview link',
   viewGenerationInfo: 'View generation information (prompt, etc.)',
+  viewMeta: 'Metadata',
+  viewMetadata: 'View metadata',
   sendToTxt2img: 'Send to txt2img',
   sendToImg2img: 'Send to img2img',
   sendToInpaint: 'Send to Inpaint',
