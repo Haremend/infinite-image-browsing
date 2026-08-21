@@ -638,4 +638,5 @@ export const zhHant: Partial<IIBI18nMap> = {
   modifiedDate: '修改日期',
   listView: '列表檢視',
   gridView: '網格檢視',
+  reloadImage: '重新載入圖片',
 }

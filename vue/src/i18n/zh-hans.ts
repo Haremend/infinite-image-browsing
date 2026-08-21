@@ -636,4 +636,5 @@ export const zhHans = {
   modifiedDate: '修改日期',
   listView: '列表视图',
   gridView: '网格视图',
+  reloadImage: '重新加载图片',
 }

@@ -397,4 +397,5 @@ export const de: Partial<IIBI18nMap> = {
   modifiedDate: 'Änderungsdatum',
   listView: 'Listenansicht',
   gridView: 'Rasteransicht',
+  reloadImage: 'Bild neu laden',
 }

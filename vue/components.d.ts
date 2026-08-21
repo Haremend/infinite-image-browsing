@@ -64,6 +64,7 @@ declare module '@vue/runtime-core' {
     NumInput: typeof import('./src/components/numInput.vue')['default']
     OrganizeJobsPanel: typeof import('./src/components/OrganizeJobsPanel.vue')['default']
     PromptEditorModal: typeof import('./src/components/PromptEditorModal.vue')['default']
+    RetryableImage: typeof import('./src/components/RetryableImage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SmartOrganizeConfigModal: typeof import('./src/components/SmartOrganizeConfigModal.vue')['default']

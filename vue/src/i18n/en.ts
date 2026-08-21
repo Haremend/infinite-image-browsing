@@ -658,4 +658,5 @@ You can specify which snapshot to restore to when starting IIB in the global set
   modifiedDate: 'Modified Date',
   listView: 'List View',
   gridView: 'Grid View',
+  reloadImage: 'Reload image',
 }

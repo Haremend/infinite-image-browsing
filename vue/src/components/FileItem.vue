@@ -21,6 +21,7 @@ import { debounce } from 'lodash-es'
 import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 import { eventEmitter as videoEventEmitter, useEventListen } from './videoEventEmitter'
 import { useI18n } from 'vue-i18n'
+import RetryableImage from './RetryableImage.vue'
 
 const { t } = useI18n()
 
@@ -298,7 +299,7 @@ const handleAudioClick = () => {
             :gen-diff-to-next="genDiffToNext" :gen-diff-to-previous="genDiffToPrevious" />
           <!-- change indicators END -->
 
-          <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
+          <RetryableImage :src="imageSrc" :fallback="fallbackImage" :preview="{
     src: fullScreenPreviewImageUrl,
     onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
   }" />

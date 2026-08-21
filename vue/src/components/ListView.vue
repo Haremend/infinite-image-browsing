@@ -32,6 +32,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { fallbackImage } from 'vue3-ts-util'
 import type { Tag } from '@/api/db'
 import { ok } from 'vue3-ts-util'
+import RetryableImage from './RetryableImage.vue'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -263,9 +264,9 @@ const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
             @click="emit('fileItemClick', $event, file, idx)"
             @dblclick="onRowDblClick($event, file)"
           >
-            <!-- 隐藏的 a-image，双击行时点击其内部图片触发全屏预览；idx-${idx} 用于全屏预览滚动定位 -->
+            <!-- 隐藏的 RetryableImage，双击行时点击其内部图片触发全屏预览；idx-${idx} 用于全屏预览滚动定位 -->
             <div v-if="isImageFile(file.name)" :class="`idx-${idx}`" class="hidden-preview-wrap">
-              <a-image
+              <RetryableImage
                 class="hidden-preview"
                 :src="cellThumbUrl(file)"
                 :fallback="fallbackImage"
