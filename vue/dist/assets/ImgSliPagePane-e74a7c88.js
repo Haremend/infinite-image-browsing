@@ -1,1 +1,0 @@
-import{d as a,o as t,m as s,c as n,cg as _,$ as o}from"./index-b91a4c5d.js";const c={class:"img-sli-container"},i=a({__name:"ImgSliPagePane",props:{paneIdx:{},tabIdx:{},left:{},right:{}},setup(l){return(e,r)=>(t(),s("div",c,[n(_,{left:e.left,right:e.right},null,8,["left","right"])]))}});const g=o(i,[["__scopeId","data-v-ae3fb9a8"]]);export{g as default};
