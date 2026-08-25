@@ -1,1 +1,0 @@
-import{bi as i,b2 as t,dX as f,b6 as n}from"./index-81a7db24.js";function u(e,s,r){if(!i(r))return!1;var a=typeof s;return(a=="number"?t(r)&&f(s,r.length):a=="string"&&s in r)?n(r[s],e):!1}export{u as i};
