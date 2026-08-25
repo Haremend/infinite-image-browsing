@@ -30,3 +30,5 @@ iib.db-wal
 videos/*
 
 # vue/dist
+vue/.claude/*
+vue/package-lock.json
