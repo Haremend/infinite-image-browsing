@@ -186,6 +186,14 @@ export const getImageGenerationInfo = async (path: string) => {
     .data as string
 }
 
+export const downloadMetaImage = async (path: string, label: string) => {
+  const resp = await axiosInst.value.get('/download_meta_image', {
+    params: { path, label },
+    responseType: 'blob' as const
+  })
+  return resp.data as Blob
+}
+
 export const updateExif = async (path: string, exif: string) => {
   const resp = await axiosInst.value.post('/update_exif', { path, exif })
   return resp.data as { success: boolean, message: string }

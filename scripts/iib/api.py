@@ -45,7 +45,7 @@ import asyncio
 from typing import List, Optional
 from pydantic import BaseModel
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import hashlib
@@ -962,6 +962,107 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         except Exception as e:
             logger.error(f"Failed to update exif for {req.path}: {e}", stack_info=True)
             raise HTTPException(status_code=500, detail=str(e))
+
+
+    @app.get(api_base + "/download_meta_image", dependencies=[Depends(verify_secret)])
+    async def download_meta_image(path: str, label: str):
+        """生成携带原始图片生成参数元数据的 512×512 新 PNG 并下载（纯内存，不落盘）。"""
+        check_path_trust(path)
+        from scripts.iib.db.update_image_data import get_exif_data
+        conn = DataBase.get_conn()
+
+        # 1. 获取 geninfo（与 /image_geninfo 保持一致：DB 优先，fallback 到文件读取）
+        img = DbImg.get(conn, path)
+        if is_dev and (not img or not img.exif_edited):
+            result = get_exif_data(path)
+            geninfo = result.raw_info or ""
+        elif img and img.exif:
+            geninfo = img.exif
+        else:
+            result = get_exif_data(path)
+            geninfo = result.raw_info or ""
+            if img and geninfo:
+                img.exif = geninfo
+                img.update(conn)
+        if not geninfo:
+            raise HTTPException(status_code=400, detail="no_geninfo")
+
+        # 2. 生成全新的 512×512 白底 PNG，绘制用户文字，嵌入 geninfo 元数据
+        meta_img = Image.new("RGB", (512, 512), (255, 255, 255))
+        draw = ImageDraw.Draw(meta_img)
+
+        # 跨平台字体路径查找
+        if is_win:
+            _font_paths = [
+                "C:/Windows/Fonts/msyh.ttc",   # 微软雅黑
+                "C:/Windows/Fonts/simhei.ttf",  # 黑体
+                "C:/Windows/Fonts/simfang.ttf", # 仿宋
+            ]
+        else:
+            # Linux/macOS：优先 DejaVu，再尝试常见中文字体路径
+            _font_paths = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+                "/System/Library/Fonts/STHeiti Light.ttc",
+                "/Library/Fonts/Arial Unicode MS.ttf",
+            ]
+
+        _font = None
+        for _fp in _font_paths:
+            try:
+                _font = ImageFont.truetype(_fp, 36)
+                break
+            except Exception:
+                pass
+        if _font is None:
+            _font = ImageFont.load_default()
+
+        # 自适应字号：二分查找最大字号使文字能完整显示在 480px 宽内
+        max_text_w = 480
+        _lo, _hi = 12, 200
+        while _lo < _hi:
+            _mid = (_lo + _hi + 1) // 2
+            try:
+                _test_font = ImageFont.truetype(_font_paths[0], _mid)
+            except Exception:
+                break
+            _tw = draw.textlength(label, font=_test_font)
+            if _tw <= max_text_w:
+                _lo = _mid
+            else:
+                _hi = _mid - 1
+        # 用计算出的最佳字号重新加载字体
+        if _font is not None and not _font.getname()[0].startswith("DejaVu"):
+            try:
+                _font = ImageFont.truetype(_font_paths[0], _lo)
+            except Exception:
+                pass
+
+        # 居中绘制用户文字（黑字白底）
+        _bbox = draw.textbbox((0, 0), label, font=_font)
+        _tw = _bbox[2] - _bbox[0]
+        _th = _bbox[3] - _bbox[1]
+        draw.text(((512 - _tw) // 2, (512 - _th) // 2 - _bbox[1]), label, fill=(0, 0, 0), font=_font)
+
+        # 嵌入 geninfo 元数据
+        from PIL.PngImagePlugin import PngInfo
+        pnginfo = PngInfo()
+        pnginfo.add_text("parameters", geninfo)
+
+        # 3. 纯内存生成，直接流式返回，不落盘
+        buf = io.BytesIO()
+        meta_img.save(buf, format="PNG", pnginfo=pnginfo)
+        png_bytes = buf.getvalue()
+
+        filename = os.path.basename(path).rsplit(".", 1)[0]
+        download_name = f"{filename}_meta_{label}.png"
+        encoded_name = urllib.parse.quote(download_name.encode('utf-8'))
+        return StreamingResponse(
+            io.BytesIO(png_bytes),
+            media_type="image/png",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_name}"},
+        )
 
 
     class CheckPathExistsReq(BaseModel):

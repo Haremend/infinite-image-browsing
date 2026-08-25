@@ -9,7 +9,7 @@ import { isImageFile, isVideoFile, isAudioFile, isMediaFile } from '@/util/file'
 import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import { openVideoModal, openAudioModal } from '@/components/functionalCallableComp'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
-import { ref, computed } from 'vue'
+import { ref, computed, h } from 'vue'
 import {
   FileOutlined,
   FolderOpenOutlined,
@@ -24,8 +24,12 @@ import {
   StarFilled,
   StarOutlined,
   DragOutlined,
-  EyeOutlined
+  EyeOutlined,
+  DownloadOutlined
 } from '@/icon'
+import { message, Modal } from 'ant-design-vue'
+import { getImageGenerationInfo, downloadMetaImage as apiDownloadMetaImage } from '@/api'
+import { t } from '@/i18n'
 import ContextMenu from './ContextMenu.vue'
 import DraggableImage from './DraggableImage.vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
@@ -207,6 +211,50 @@ const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
   e.stopPropagation()
   emit('contextMenuClick', { key: 'viewGenInfo' } as MenuInfo, file, idx)
 }
+
+// ===== 下载图片格式元数据 =====
+const onDownloadMetadata = async (file: FileNodeInfo, e: MouseEvent) => {
+  if (file.type !== 'file' || !file.name.toLowerCase().endsWith('.png')) return
+  e.stopPropagation()
+
+  Modal.confirm({
+    title: t('downloadMeta'),
+    content: () => h('input', {
+      id: 'meta-input',
+      placeholder: t('downloadMeta'),
+      maxLength: 30,
+      autofocus: true,
+      style: 'width:100%;box-sizing:border-box;padding:4px 8px;'
+    }) as any,
+    okText: t('confirm'),
+    cancelText: t('cancel'),
+    width: 380,
+    onOk: async () => {
+      const input = document.getElementById('meta-input') as HTMLInputElement
+      const userText = input?.value?.trim() || ''
+      if (!userText) {
+        message.warning(t('pleaseInputMetadataLabel'))
+        return false
+      }
+      const geninfo = await getImageGenerationInfo(file.fullpath)
+      if (!geninfo) {
+        message.warning(t('noGeninfo'))
+        return false
+      }
+      const blob = await apiDownloadMetaImage(file.fullpath, userText)
+      const base = file.name.replace(/\.[^/.]+$/, '')
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${base}_meta_${userText}.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      return true
+    }
+  })
+}
 </script>
 
 <template>
@@ -304,6 +352,14 @@ const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
                 @click="onViewGenInfo(file, idx, $event)"
               >
                 <eye-outlined />
+              </div>
+              <div
+                v-if="file.type === 'file' && file.name.toLowerCase().endsWith('.png')"
+                class="action-btn"
+                :title="$t('downloadMeta')"
+                @click="onDownloadMetadata(file, $event)"
+              >
+                <download-outlined />
               </div>
             </div>
             <div class="col-date">{{ file.date }}</div>
@@ -501,11 +557,12 @@ const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
 }
 
 .col-meta {
-  width: 110px;
+  width: 140px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
 }
 
 .col-size {
