@@ -991,15 +991,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         meta_img = Image.new("RGB", (512, 512), (255, 255, 255))
         draw = ImageDraw.Draw(meta_img)
 
-        # 跨平台字体路径查找
-        if is_win:
+        # 字体路径：优先使用项目内置字体（跨平台一致），其次 fallback 到系统字体
+        _font_dir = os.path.join(os.path.dirname(__file__), "fonts")
+        _bundled_font = os.path.join(_font_dir, "msyh.ttc")
+        if os.path.exists(_bundled_font):
+            _font_paths = [_bundled_font]
+        elif is_win:
             _font_paths = [
-                "C:/Windows/Fonts/msyh.ttc",   # 微软雅黑
-                "C:/Windows/Fonts/simhei.ttf",  # 黑体
-                "C:/Windows/Fonts/simfang.ttf", # 仿宋
+                "C:/Windows/Fonts/msyh.ttc",
+                "C:/Windows/Fonts/simhei.ttf",
+                "C:/Windows/Fonts/simfang.ttf",
             ]
         else:
-            # Linux/macOS：优先 DejaVu，再尝试常见中文字体路径
             _font_paths = [
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
