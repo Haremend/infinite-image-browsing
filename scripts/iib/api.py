@@ -1032,8 +1032,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 _lo = _mid
             else:
                 _hi = _mid - 1
-        # 用计算出的最佳字号重新加载字体
-        if _font is not None and not _font.getname()[0].startswith("DejaVu"):
+        # 用计算出的最佳字号重新加载字体（DejaVu 等内置字体 skip 此步骤）
+        _font_name = getattr(_font, "getname", lambda: ("", ""))()[0]
+        if _font is not None and not _font_name.startswith("DejaVu"):
             try:
                 _font = ImageFont.truetype(_font_paths[0], _lo)
             except Exception:
