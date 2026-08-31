@@ -6,7 +6,6 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { useTagStore } from '@/store/useTagStore'
 import { FileNodeInfo } from '@/api/files'
 import { isImageFile, isVideoFile, isAudioFile, isMediaFile } from '@/util/file'
-import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import { openVideoModal, openAudioModal } from '@/components/functionalCallableComp'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
 import { ref, computed, h } from 'vue'
@@ -136,11 +135,18 @@ const formatFileSize = (bytes: number): string => {
 // 当前全屏预览源图（与非列表视图保持一致行为，用于 a-image preview 翻页）
 const previewSrc = computed(() => props.fullScreenPreviewImageUrl || '')
 
-// 行内缩略图 url（仅用于隐藏 a-image 元素，不展示）
+// 行内隐藏 a-image 的 src。该 <img> 仅作为「双击行 / 跳转目标文件时点击触发全屏预览」的锚点，
+// 自身从不展示（外层 .hidden-preview-wrap 已设为 1px / 透明 / pointer-events:none）。
+// 用内联 1x1 透明像素，保证 a-image 始终渲染出可被 querySelector('.idx-N .ant-image-img')
+// 命中并点击的 <img>，同时彻底避免列表滚动时对每一行发起 image-thumbnail / 原图请求
+// （网速慢 + 几十 MB 大图时，这些请求会挤占浏览器并发连接、触发 _r 重试，并拖慢
+// 「查看元数据」等其他接口）。全屏预览实际显示的图片由 :preview.src（fullScreenPreviewImageUrl
+// = 原图 URL）决定，与此处 src 无关。
+const TRANSPARENT_PIXEL =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 const cellThumbUrl = (file: FileNodeInfo) => {
   if (!isImageFile(file.name)) return ''
-  const r = global.gridThumbnailResolution
-  return global.enableThumbnail ? toImageThumbnailUrl(file, [r, r].join('x')) : toRawFileUrl(file)
+  return TRANSPARENT_PIXEL
 }
 
 const openPreview = (file: FileNodeInfo, e: MouseEvent) => {
