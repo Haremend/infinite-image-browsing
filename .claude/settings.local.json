@@ -9,7 +9,10 @@
       "Bash(python:*)",
       "Bash(npx vue-tsc:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('scripts/iib/api.py', encoding='utf-8'\\).read\\(\\)\\); print\\('syntax ok'\\)\")",
+      "Bash(npx vite *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }
