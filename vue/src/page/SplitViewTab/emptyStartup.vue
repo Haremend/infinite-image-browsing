@@ -52,6 +52,7 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   'random-image': t('randomImage'),
   'global-setting': t('globalSettings'),
   'trend': t('trend'),
+  'folder-statistics': t('folderStatistics'),
 }
 type FileTransModeIn = 'preset' | ExtraPathType
 const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn) => {
@@ -70,6 +71,7 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
     case 'topic-search':
     case 'random-image':
     case 'trend':
+    case 'folder-statistics':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
@@ -87,6 +89,14 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
 
 const openTrend = () => {
   const pane = createPane('trend')
+  if (pane) {
+    const tab = global.tabList[0]
+    if (tab) { tab.panes.push(pane); tab.key = pane.key }
+  }
+}
+
+const openFolderStatistics = () => {
+  const pane = createPane('folder-statistics')
   if (pane) {
     const tab = global.tabList[0]
     if (tab) { tab.panes.push(pane); tab.key = pane.key }
@@ -201,6 +211,12 @@ const modes = computed(() => {
         <a-tooltip :title="$t('trendPanel')">
           <div class="trend-icon-btn" @click="openTrend">
             <bar-chart-outlined />
+          </div>
+        </a-tooltip>
+
+        <a-tooltip :title="$t('folderStatistics')">
+          <div class="trend-icon-btn" @click="openFolderStatistics">
+            <file-done-outlined />
           </div>
         </a-tooltip>
 

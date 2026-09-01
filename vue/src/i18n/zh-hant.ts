@@ -638,6 +638,21 @@ export const zhHant: Partial<IIBI18nMap> = {
   trendHeatmapLess: '少',
   trendHeatmapMore: '多',
 
+  // ===== 資料夾統計 =====
+  folderStatistics: '資料夾統計',
+  folderStatisticsInputPlaceholder: '輸入要遞迴統計的資料夾路徑',
+  folderStatisticsInputTip: '請輸入資料夾路徑',
+  folderStatisticsEmpty: '暫無統計結果，請輸入路徑並點擊開始統計',
+  scanStatistics: '開始統計',
+  forceRescan: '重新統計',
+  scannedFolders: '已掃資料夾',
+  countedFiles: '檔案數',
+  fileCount: '檔案數',
+  folderPath: '資料夾路徑',
+  operation: '操作',
+  openInStackView: '在 stackView 開啟',
+  lastCountedAt: '上次統計時間',
+
   // ===== List View =====
   modifiedDate: '修改日期',
   listView: '列表檢視',

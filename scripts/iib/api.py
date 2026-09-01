@@ -67,6 +67,7 @@ from scripts.iib.topic_cluster import mount_topic_cluster_routes
 from scripts.iib.tag_graph import mount_tag_graph_routes
 from scripts.iib.organize_files import mount_organize_routes
 from scripts.iib.trend import mount_trend_routes
+from scripts.iib.folder_count import mount_folder_count_routes
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
@@ -1634,6 +1635,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         app=app,
         db_api_base=db_api_base,
         verify_secret=verify_secret,
+    )
+
+    # ===== 文件夹文件数量统计 =====
+    mount_folder_count_routes(
+        app=app,
+        db_api_base=db_api_base,
+        verify_secret=verify_secret,
+        write_permission_required=write_permission_required,
+        check_path_trust=check_path_trust,
     )
 
 

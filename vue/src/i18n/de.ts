@@ -386,6 +386,21 @@ export const de: Partial<IIBI18nMap> = {
   trendHeatmapLess: 'Weniger',
   trendHeatmapMore: 'Mehr',
 
+  // ===== Ordnerstatistik =====
+  folderStatistics: 'Ordnerstatistik',
+  folderStatisticsInputPlaceholder: 'Ordnerpfad zum rekursiven Zählen eingeben',
+  folderStatisticsInputTip: 'Bitte Ordnerpfad eingeben',
+  folderStatisticsEmpty: 'Keine Ergebnisse. Pfad eingeben und auf Start klicken.',
+  scanStatistics: 'Scan starten',
+  forceRescan: 'Neu scannen',
+  scannedFolders: 'Gescannte Ordner',
+  countedFiles: 'Dateien',
+  fileCount: 'Dateianzahl',
+  folderPath: 'Ordnerpfad',
+  operation: 'Aktion',
+  openInStackView: 'In stackView öffnen',
+  lastCountedAt: 'Zuletzt gezählt',
+
   // ===== Dateiname Filter =====
   fileNameFilter: 'Dateiname Filter',
   fileNameFilterHint: 'Geben Sie einen regulären Ausdruck ein, um Dateinamen zu filtern. Nur übereinstimmende Dateien werden angezeigt.',

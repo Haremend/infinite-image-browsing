@@ -658,6 +658,21 @@ You can specify which snapshot to restore to when starting IIB in the global set
   trendHeatmapLess: 'Less',
   trendHeatmapMore: 'More',
 
+  // ===== 文件夹统计 =====
+  folderStatistics: 'Folder Statistics',
+  folderStatisticsInputPlaceholder: 'Enter folder path to recursively count',
+  folderStatisticsInputTip: 'Please enter a folder path',
+  folderStatisticsEmpty: 'No results yet. Enter a path and click start to scan.',
+  scanStatistics: 'Start Scan',
+  forceRescan: 'Re-scan',
+  scannedFolders: 'Scanned folders',
+  countedFiles: 'Files',
+  fileCount: 'File Count',
+  folderPath: 'Folder Path',
+  operation: 'Action',
+  openInStackView: 'Open in stackView',
+  lastCountedAt: 'Last counted',
+
   // ===== List View =====
   modifiedDate: 'Modified Date',
   listView: 'List View',

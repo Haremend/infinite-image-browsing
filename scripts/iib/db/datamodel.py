@@ -88,6 +88,7 @@ class DataBase:
             ImageEmbeddingFail.create_table(conn)
             TopicTitleCache.create_table(conn)
             TopicClusterCache.create_table(conn)
+            FolderFileCount.create_table(conn)
         finally:
             conn.commit()
         clz.num += 1
@@ -1395,7 +1396,61 @@ class DirCoverCache:
             return json.loads(media_files_json)
         else:
             return []
-        
+
+
+class FolderFileCount:
+    """递归统计某个根目录下各子文件夹的媒体文件数量，结果持久化。
+    不做自动失效——仅在用户点「重新统计」时覆盖，否则恒用此结果。"""
+
+    @classmethod
+    def create_table(cls, conn):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS folder_file_count (
+                    root_path TEXT PRIMARY KEY,
+                    result TEXT,
+                    total INTEGER,
+                    counted_at TEXT
+                )
+                """
+            )
+
+    @classmethod
+    def get(cls, conn, root_path):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "SELECT root_path, result, total, counted_at FROM folder_file_count WHERE root_path = ?",
+                (root_path,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            "root_path": row[0],
+            "result": json.loads(row[1]) if row[1] else [],
+            "total": row[2] or 0,
+            "counted_at": row[3],
+        }
+
+    @classmethod
+    def save(cls, conn, root_path, result, total):
+        result_json = json.dumps(result, ensure_ascii=False)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """
+                INSERT INTO folder_file_count (root_path, result, total, counted_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(root_path) DO UPDATE SET
+                    result = excluded.result,
+                    total = excluded.total,
+                    counted_at = excluded.counted_at
+                """,
+                (root_path, result_json, total, datetime.now().isoformat()),
+            )
+            conn.commit()
+
+
 # Global settings storage, also use as key-value store
 class GlobalSetting:
     @classmethod

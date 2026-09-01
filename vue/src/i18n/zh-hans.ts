@@ -636,6 +636,21 @@ export const zhHans = {
   trendHeatmapLess: '少',
   trendHeatmapMore: '多',
 
+  // ===== 文件夹统计 =====
+  folderStatistics: '文件夹统计',
+  folderStatisticsInputPlaceholder: '输入要递归统计的文件夹路径',
+  folderStatisticsInputTip: '请输入文件夹路径',
+  folderStatisticsEmpty: '暂无统计结果，请输入路径并点击开始统计',
+  scanStatistics: '开始统计',
+  forceRescan: '重新统计',
+  scannedFolders: '已扫文件夹',
+  countedFiles: '文件数',
+  fileCount: '文件数',
+  folderPath: '文件夹路径',
+  operation: '操作',
+  openInStackView: '在 stackView 打开',
+  lastCountedAt: '上次统计时间',
+
   // ===== List View =====
   modifiedDate: '修改日期',
   listView: '列表视图',
