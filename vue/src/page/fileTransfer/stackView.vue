@@ -88,7 +88,7 @@ const {
   dirCoverCache
 } = useFilesDisplay()
 const { onDrop, onFileDragStart, onFileDragEnd, onFileDropToFolder } = useFileTransfer()
-const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
+const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, genInfoFileName, genInfoFilePath, q } = useFileItemActions({ openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview, scrollToFileId,scrollToIndex } = usePreview()
 const tiktokStore = useTiktokStore()
 const { showMenuIdx } = useMobileOptimization()
@@ -288,7 +288,11 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
     <ASelect style="display: none"></ASelect>
 
     <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
-      <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
+      <AModal v-model:visible="showGenInfo" width="70vw" mask-closable wrap-class-name="geninfo-modal"
+        @ok="showGenInfo = false">
+        <template #title>
+          <span class="geninfo-title" :title="genInfoFilePath">{{ genInfoFileName }}</span>
+        </template>
         <template #cancelText />
         <ASkeleton active :loading="!q.isIdle">
           <div style="
@@ -299,8 +303,7 @@ const isFilterActive = computed(() => isFileNameFilterActive.value)
                 overflow: auto;
                 z-index: 9999;
               " @dblclick="copy2clipboardI18n(imageGenInfo)">
-            <div class="hint">{{ $t('doubleClickToCopy') }}</div>
-            {{ imageGenInfo }}
+            <div class="geninfo-text">{{ imageGenInfo }}</div>
           </div>
         </ASkeleton>
       </AModal>

@@ -251,3 +251,25 @@ ul.ant-dropdown-menu  {
     background: var(--primary-color-1);
   }
 }
+
+// 生成信息弹窗标题：显示该生成信息属于哪个文件
+.geninfo-title {
+  display: inline-block;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// 生成信息弹窗：收紧标题栏与内容之间的留白
+.geninfo-modal {
+  .ant-modal-header {
+    padding: 10px 24px;
+    margin-bottom: 0;
+  }
+
+  .ant-modal-body {
+    padding: 8px 24px 12px;
+  }
+}

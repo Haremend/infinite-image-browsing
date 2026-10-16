@@ -29,6 +29,9 @@ export function useFileItemActions (
 ) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
+  /** 当前弹窗中展示的生成信息所属文件 */
+  const genInfoFileName = ref('')
+  const genInfoFilePath = ref('')
   const {
     sortedFiles,
     previewIdx,
@@ -307,6 +310,8 @@ export function useFileItemActions (
       }
       case 'viewGenInfo': {
         showGenInfo.value = true
+        genInfoFileName.value = file.name
+        genInfoFilePath.value = file.fullpath
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
         break
       }
@@ -477,6 +482,8 @@ export function useFileItemActions (
     onContextMenuClick,
     showGenInfo,
     imageGenInfo,
+    genInfoFileName,
+    genInfoFilePath,
     q
   }
 }

@@ -35,6 +35,8 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
   const {
     showGenInfo,
     imageGenInfo,
+    genInfoFileName,
+    genInfoFilePath,
     q: genInfoQueue,
     onContextMenuClick,
     onFileItemClick
@@ -79,6 +81,8 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     gridItems,
     showGenInfo,
     imageGenInfo,
+    genInfoFileName,
+    genInfoFilePath,
     q: genInfoQueue,
     onContextMenuClick,
     onFileItemClick,

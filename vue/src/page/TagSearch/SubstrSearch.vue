@@ -70,6 +70,8 @@ const {
   gridItems,
   showGenInfo,
   imageGenInfo,
+  genInfoFileName,
+  genInfoFilePath,
   q: genInfoQueue,
   multiSelectedIdxs,
   onFileItemClick,
@@ -278,7 +280,11 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
     </div>
     </div>
     <ASpin size="large" :spinning="!queue.isIdle">
-      <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
+      <AModal v-model:visible="showGenInfo" width="70vw" mask-closable wrap-class-name="geninfo-modal"
+        @ok="showGenInfo = false">
+        <template #title>
+          <span class="geninfo-title" :title="genInfoFilePath">{{ genInfoFileName }}</span>
+        </template>
         <template #cancelText />
         <ASkeleton active :loading="!genInfoQueue.isIdle">
           <div style="
@@ -288,8 +294,7 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
                               max-height: 70vh;
                               overflow: auto;
                             " @dblclick="copy2clipboardI18n(imageGenInfo)">
-            <div class="hint">{{ $t('doubleClickToCopy') }}</div>
-            {{ imageGenInfo }}
+            <div class="geninfo-text">{{ imageGenInfo }}</div>
           </div>
         </ASkeleton>
       </AModal>
