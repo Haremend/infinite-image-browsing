@@ -628,7 +628,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return res
 
     @app.get(api_base + "/image-thumbnail", dependencies=[Depends(verify_secret)])
-    async def thumbnail(path: str, t: str, size: str = "256x256"):
+    def thumbnail(path: str, t: str, size: str = "256x256"):
+        # 刻意写成同步接口：FastAPI 会把它丢进线程池执行。
+        # 缩略图的解码/缩放/编码是 CPU 密集的阻塞操作（一张 2048x3072 约 100ms），
+        # 若写成 async def 会占住事件循环，把同时进行的其他请求（原图、目录列表等）一起卡住，
+        # 而且只能用到一个核。PIL 解码时会释放 GIL，交给线程池才能真正并行。
         check_path_trust(path)
         if not cache_base_dir:
             return
@@ -646,7 +650,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
 
-                
+
         # 如果小于64KB，直接返回原图
         if os.path.getsize(path) < 64 * 1024:
             return FileResponse(
@@ -654,15 +658,45 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 media_type="image/" + path.split(".")[-1],
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
-        
+
 
         # 如果缓存文件不存在，则生成缩略图并保存
-        with Image.open(path) as img:
-            w, h = size.split("x")
-            img.thumbnail((int(w), int(h)))
-            os.makedirs(cache_dir, exist_ok=True)
-            img.save(cache_path, "webp")
-            # print(f"Image cache generated: {path}")
+        try:
+            with Image.open(path) as img:
+                w, h = size.split("x")
+                img.thumbnail((int(w), int(h)))
+                os.makedirs(cache_dir, exist_ok=True)
+                # 先写临时文件再原子替换：否则并发请求可能读到只写了一半的缓存文件，
+                # 而它还会被当作正常响应缓存一年
+                tmp_path = os.path.join(
+                    cache_dir, f"{size}.{os.getpid()}-{os.urandom(4).hex()}.tmp"
+                )
+                try:
+                    img.save(tmp_path, "webp")
+                    try:
+                        os.replace(tmp_path, cache_path)
+                    except OSError:
+                        # 目标已存在且正被其他请求读取时，Windows 上替换会失败，
+                        # 说明别的请求已经写好了，直接用现成的即可
+                        if not os.path.exists(cache_path):
+                            raise
+                finally:
+                    if os.path.exists(tmp_path):
+                        try:
+                            os.remove(tmp_path)
+                        except OSError:
+                            pass
+                # print(f"Image cache generated: {path}")
+        except Exception as e:
+            # 坏图、超出 PIL 解压炸弹限制的巨图等无法生成缩略图时退回原图，
+            # 避免 500 让前端 RetryableImage 反复重试
+            logger.warning(f"Failed to generate thumbnail for {path}: {e}")
+            return FileResponse(
+                path,
+                media_type="image/" + path.split(".")[-1],
+                # 不缓存，等下次请求再尝试生成
+                headers={"Cache-Control": "no-store"},
+            )
 
         # 返回缓存文件
         return FileResponse(
