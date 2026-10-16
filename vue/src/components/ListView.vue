@@ -6,9 +6,9 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { useTagStore } from '@/store/useTagStore'
 import { FileNodeInfo } from '@/api/files'
 import { isImageFile, isVideoFile, isAudioFile, isMediaFile } from '@/util/file'
-import { openVideoModal, openAudioModal } from '@/components/functionalCallableComp'
+import { openVideoModal, openAudioModal, openDownloadMetaModal } from '@/components/functionalCallableComp'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
-import { ref, computed, h } from 'vue'
+import { ref, computed } from 'vue'
 import {
   FileOutlined,
   FolderOpenOutlined,
@@ -26,9 +26,6 @@ import {
   EyeOutlined,
   DownloadOutlined
 } from '@/icon'
-import { message, Modal } from 'ant-design-vue'
-import { getImageGenerationInfo, downloadMetaImage as apiDownloadMetaImage } from '@/api'
-import { t } from '@/i18n'
 import ContextMenu from './ContextMenu.vue'
 import DraggableImage from './DraggableImage.vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
@@ -219,47 +216,10 @@ const onViewGenInfo = (file: FileNodeInfo, idx: number, e: MouseEvent) => {
 }
 
 // ===== 下载图片格式元数据 =====
-const onDownloadMetadata = async (file: FileNodeInfo, e: MouseEvent) => {
+const onDownloadMetadata = (file: FileNodeInfo, e: MouseEvent) => {
   if (file.type !== 'file' || !file.name.toLowerCase().endsWith('.png')) return
   e.stopPropagation()
-
-  Modal.confirm({
-    title: t('downloadMeta'),
-    content: () => h('input', {
-      id: 'meta-input',
-      placeholder: t('downloadMeta'),
-      maxLength: 30,
-      autofocus: true,
-      style: 'width:100%;box-sizing:border-box;padding:4px 8px;'
-    }) as any,
-    okText: t('confirm'),
-    cancelText: t('cancel'),
-    width: 380,
-    onOk: async () => {
-      const input = document.getElementById('meta-input') as HTMLInputElement
-      const userText = input?.value?.trim() || ''
-      if (!userText) {
-        message.warning(t('pleaseInputMetadataLabel'))
-        return false
-      }
-      const geninfo = await getImageGenerationInfo(file.fullpath)
-      if (!geninfo) {
-        message.warning(t('noGeninfo'))
-        return false
-      }
-      const blob = await apiDownloadMetaImage(file.fullpath, userText)
-      const base = file.name.replace(/\.[^/.]+$/, '')
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${base}_meta_${userText}.png`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      return true
-    }
-  })
+  openDownloadMetaModal(file)
 }
 </script>
 

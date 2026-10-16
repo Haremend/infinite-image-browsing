@@ -2,7 +2,7 @@ import { Button, Input, Modal, message, Spin } from 'ant-design-vue'
 import { StyleValue, ref } from 'vue'
 import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
-import { setTargetFrameAsCover, getImageGenerationInfo } from '@/api'
+import { setTargetFrameAsCover, getImageGenerationInfo, downloadMetaImage } from '@/api'
 import { parse } from '@/util/stable-diffusion-image-metadata'
 import { t } from '@/i18n'
 import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl, toStreamAudioUrl } from '@/util'
@@ -362,6 +362,45 @@ export const openAddNewTagModal = () => {
           message.success(t('success'))
         }
         resolve(name.value)
+      }
+    })
+  })
+}
+
+/**
+ * 下载图片格式的元数据（生成携带生成参数的新 PNG 并下载）
+ */
+export const openDownloadMetaModal = (file: FileNodeInfo) => {
+  const label = ref('')
+  return new Promise<void>((resolve) => {
+    Modal.confirm({
+      title: t('downloadMeta'),
+      content: () => <Input v-model:value={label.value} placeholder={t('downloadMeta')} maxlength={30} autofocus />,
+      okText: t('confirm'),
+      cancelText: t('cancel'),
+      width: 380,
+      async onOk () {
+        const userText = label.value.trim()
+        if (!userText) {
+          message.warning(t('pleaseInputMetadataLabel'))
+          return
+        }
+        const geninfo = await getImageGenerationInfo(file.fullpath)
+        if (!geninfo) {
+          message.warning(t('noGeninfo'))
+          return
+        }
+        const blob = await downloadMetaImage(file.fullpath, userText)
+        const base = file.name.replace(/\.[^/.]+$/, '')
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${base}_meta_${userText}.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        resolve()
       }
     })
   })

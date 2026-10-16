@@ -18,7 +18,7 @@ import { t } from '@/i18n'
 import { batchUpdateImageTag, toggleCustomTagToImg } from '@/api/db'
 import { downloadFileInfoJSON, downloadFiles, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
-import { MultiSelectTips, openAddNewTagModal, openRenameFileModal } from '@/components/functionalCallableComp'
+import { MultiSelectTips, openAddNewTagModal, openDownloadMetaModal, openRenameFileModal } from '@/components/functionalCallableComp'
 import { batchDownload, events, imgTransferBus, stackCache, tagStore, useEventListen, useHookShareState, global } from '.'
 import { closeImageFullscreenPreview, openImageFullscreenPreview } from '@/util/imagePreviewOperation'
 import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
@@ -308,6 +308,10 @@ export function useFileItemActions (
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        break
+      }
+      case 'downloadMeta': {
+        openDownloadMetaModal(file)
         break
       }
       case 'tiktokView': {
