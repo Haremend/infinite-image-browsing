@@ -17,6 +17,7 @@ import {
   FullscreenOutlined,
   ArrowsAltOutlined,
   EllipsisOutlined,
+  CloseOutlined,
   fullscreen,
   SortAscendingOutlined,
   AppstoreOutlined,
@@ -32,7 +33,7 @@ import { parse } from '@/util/stable-diffusion-image-metadata'
 import { useFullscreenLayout } from '@/util/useFullscreenLayout'
 import { useMouseInElement } from '@vueuse/core'
 import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
-import { openAddNewTagModal, openEditPromptModal } from '@/components/functionalCallableComp'
+import { openAddNewTagModal, openDownloadMetaModal, openEditPromptModal } from '@/components/functionalCallableComp'
 import { prefix } from '@/util/const'
 // @ts-ignore
 import * as Pinyin from 'jian-pinyin'
@@ -82,6 +83,13 @@ const emit = defineEmits<{
 
 const promptTabActivedKey = useLocalStorage('iib@fullScreenContextMenu.prompt-tab', 'structedData' as 'structedData' | 'sourceText' | 'exif')
 
+// 面板自身的显隐，独立于图片预览（预览的显示状态由父组件控制）
+const panelVisible = ref(true)
+
+const closePanel = () => {
+  panelVisible.value = false
+}
+
 async function loadExifData() {
   if (!props?.file?.fullpath) {
     return
@@ -102,6 +110,7 @@ watch(
     if (!path) {
       return
     }
+    panelVisible.value = true
     q.tasks.forEach((v) => v.cancel())
     q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
       imageGenInfo.value = v
@@ -141,8 +150,16 @@ if (state.value && (state.value.left < 0 || state.value.top < 0)) {
 }
 
 
-const { isLeftRightLayout, lrLayoutInfoPanelWidth, lrMenuAlwaysOn } = useFullscreenLayout()
+const { isLeftRightLayout, lrLayoutInfoPanelWidth, lrMenuAlwaysOn, state: lrLayoutState } = useFullscreenLayout()
 const lr = isLeftRightLayout
+// 左右布局下面板是常驻的一列，隐藏时把预留的宽度还给图片区域
+watch(panelVisible, (visible) => {
+  if (!lr.value) {
+    return
+  }
+  const offset = visible && lrLayoutState.alwaysOn ? lrLayoutState.panelWidth : 0
+  document.documentElement.style.setProperty('--iib-lr-layout-container-offset', `${offset}px`)
+})
 useResizeAndDrag(el, resizeHandle, dragHandle, {
   disbaled: lr,
   ...state.value,
@@ -452,7 +469,7 @@ const editPromptAndReload = async () => {
 </script>
 
 <template>
-  <div ref="el" class="full-screen-menu" @wheel.capture.stop @keydown.capture="onKeydown"
+  <div ref="el" class="full-screen-menu" v-show="panelVisible" @wheel.capture.stop @keydown.capture="onKeydown"
     :class="{ 'unset-size': !state.expanded, lr, 'always-on': lrMenuAlwaysOn, 'mouse-in': isInside }">
 
     <div v-if="lr">
@@ -540,6 +557,9 @@ const editPromptAndReload = async () => {
           </a-dropdown>
           <AButton @click="emit('contextMenuClick', { key: 'download' } as MenuInfo, props.file, props.idx)">{{
             $t('download') }}</AButton>
+          <a-button v-if="file?.name?.toLowerCase().endsWith('.png')" @click="openDownloadMetaModal(file)">{{
+            $t('downloadMeta')
+          }}</a-button>
           <a-button @click="copy2clipboardI18n(imageGenInfo)" v-if="imageGenInfo">{{
             $t('copyPrompt')
           }}</a-button>
@@ -566,7 +586,10 @@ const editPromptAndReload = async () => {
             {{ $t('editPrompt') }}
           </a-button>
         </div>
-      </div>    
+        <div class="icon" style="cursor: pointer; margin-left: auto" :title="t('close')" @click="closePanel">
+          <CloseOutlined />
+        </div>
+      </div>
       <div class="gen-info" v-if="showFullContent">
     
         <div block  v-if="global.fullscreenMenuBlockVisibility.infoTags" class="info-tags">
