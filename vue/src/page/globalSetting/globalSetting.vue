@@ -2,7 +2,7 @@
 import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut, type DefaultInitinalPage } from '@/store/useGlobalStore'
 import { useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { SearchSelect} from 'vue3-ts-util'
 import { sortMethodConv, sortMethods } from '@/page/fileTransfer/fileSort'
 import { relaunch } from '@tauri-apps/api/process'
@@ -14,7 +14,8 @@ import ImageSetting from './ImageSetting.vue'
 import AutoTagSettings from './AutoTagSettings.vue'
 import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 import { Dict } from '@/util'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
+import { getCacheInfo, clearCache, type CacheInfo } from '@/api'
 import { throttle, debounce } from 'lodash-es'
 import { useLocalStorage } from '@vueuse/core'
 import { prefix } from '@/util/const'
@@ -155,6 +156,56 @@ const presetShortcutGroups = computed(() => ([
 ]))
 
 // 自然语言分类&搜索 已提升到首页启动入口（TopicSearch），全局设置不再保留旧入口
+
+// ===== 缩略图缓存 =====
+const cacheInfo = ref<CacheInfo | null>(null)
+const cacheLoading = ref(false)
+const cacheClearing = ref(false)
+
+const formatBytes = (bytes: number): string => {
+  if (!bytes) return '0 B'
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), sizes.length - 1)
+  return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + sizes[i]
+}
+
+const loadCacheInfo = async () => {
+  cacheLoading.value = true
+  try {
+    cacheInfo.value = await getCacheInfo()
+  } catch (e: any) {
+    message.error(e?.message || String(e))
+  } finally {
+    cacheLoading.value = false
+  }
+}
+
+const onClearCache = () => {
+  if (globalStore.conf?.is_readonly) {
+    return message.warn(t('cacheClearBlocked'))
+  }
+  Modal.confirm({
+    title: t('clearCache'),
+    content: t('clearCacheConfirm'),
+    okText: t('confirm'),
+    cancelText: t('cancel'),
+    okButtonProps: { loading: cacheClearing.value },
+    onOk: async () => {
+      cacheClearing.value = true
+      try {
+        await clearCache()
+        message.success(t('clearCacheSuccess'))
+        await loadCacheInfo()
+      } catch (e: any) {
+        message.error(e?.message || String(e))
+      } finally {
+        cacheClearing.value = false
+      }
+    }
+  })
+}
+
+onMounted(loadCacheInfo)
 </script>
 <template>
   <div class="panel">
@@ -238,6 +289,25 @@ const presetShortcutGroups = computed(() => ([
         <a-switch v-model:checked="disableMaximize" />
         <sub style="padding-left: 8px;color: #666;">{{ $t('takeEffectAfterReloadPage') }}</sub>
       </a-form-item>
+
+      <h2 style="margin-top: 0;">{{ t('cacheDir') }}</h2>
+      <a-spin :spinning="cacheLoading">
+        <a-form-item :label="$t('cacheDir')">
+          <code class="cache-path" :title="cacheInfo?.dir">{{ cacheInfo?.dir || t('cacheDirEmpty') }}</code>
+        </a-form-item>
+        <a-form-item :label="$t('cacheFileCount')">
+          <span>{{ cacheInfo?.exists ? cacheInfo.file_count : t('cacheDirNotExist') }}</span>
+        </a-form-item>
+        <a-form-item :label="$t('cacheSize')">
+          <span>{{ cacheInfo?.exists ? formatBytes(cacheInfo.total_size) : '--' }}</span>
+        </a-form-item>
+        <a-form-item>
+          <a-button danger :loading="cacheClearing" :disabled="cacheLoading || globalStore.conf?.is_readonly" @click="onClearCache">
+            {{ $t('clearCache') }}
+          </a-button>
+          <a-button style="margin-left: 8px" @click="loadCacheInfo">{{ $t('refresh') }}</a-button>
+        </a-form-item>
+      </a-spin>
 
       
 
@@ -379,5 +449,15 @@ h2 {
 
 .clear-btn {
   margin-left: 16px;
+}
+
+.cache-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  word-break: break-all;
+  background: var(--zp-secondary-background);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--zp-primary);
 }
 </style>

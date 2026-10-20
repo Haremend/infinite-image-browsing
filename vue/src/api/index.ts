@@ -305,3 +305,21 @@ export const flattenFolder = async (req: FlattenFolderReq) => {
   const resp = await axiosInst.value.post('/flatten_folder', req)
   return resp.data as FlattenFolderResp
 }
+
+export interface CacheInfo {
+  /** 缓存目录绝对路径；未配置 IIB_CACHE_DIR 时可能为空 */
+  dir: string
+  exists: boolean
+  file_count: number
+  total_size: number
+}
+
+export const getCacheInfo = async (): Promise<CacheInfo> => {
+  const resp = await axiosInst.value.get('/cache_info')
+  return resp.data as CacheInfo
+}
+
+export const clearCache = async (): Promise<{ cleared: number, dir: string }> => {
+  const resp = await axiosInst.value.post('/cache_clear')
+  return resp.data as { cleared: number, dir: string }
+}

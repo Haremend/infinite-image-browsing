@@ -355,6 +355,45 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             from scripts.iib.auto_tag import AutoTagMatcher
             AutoTagMatcher.reload_rules(conn)
 
+    @app.get(f"{api_base}/cache_info", dependencies=[Depends(verify_secret)])
+    async def cache_info():
+        """返回缩略图/视频封面缓存目录的位置、文件数、占用大小，供全局设置页展示。"""
+        dir_path = os.path.join(cache_base_dir, "iib_cache") if cache_base_dir else ""
+        exists = bool(dir_path) and os.path.isdir(dir_path)
+        file_count = 0
+        total_size = 0
+        if exists:
+            for root, _, files in os.walk(dir_path):
+                for name in files:
+                    file_count += 1
+                    try:
+                        total_size += os.path.getsize(os.path.join(root, name))
+                    except OSError:
+                        pass
+        return {
+            "dir": dir_path,
+            "exists": exists,
+            "file_count": file_count,
+            "total_size": total_size,
+        }
+
+    @app.post(f"{api_base}/cache_clear", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
+    async def cache_clear():
+        """清空缩略图/视频封面缓存目录下所有已缓存文件，保留目录本身。"""
+        dir_path = os.path.join(cache_base_dir, "iib_cache") if cache_base_dir else ""
+        if not (dir_path and os.path.isdir(dir_path)):
+            return {"cleared": 0, "dir": dir_path}
+        cleared = 0
+        for root, _, files in os.walk(dir_path, topdown=False):
+            for name in files:
+                p = os.path.join(root, name)
+                try:
+                    os.remove(p)
+                    cleared += 1
+                except OSError as e:
+                    logger.warning(f"Failed to remove cache file {p}: {e}")
+        return {"cleared": cleared, "dir": dir_path}
+
     class AppFeSettingDelReq(BaseModel):
         name: str
 
