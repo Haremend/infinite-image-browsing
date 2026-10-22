@@ -662,6 +662,8 @@ export const zhHans = {
 
   // ===== List View =====
   modifiedDate: '修改日期',
+  displayTimezoneOffset: '日期时区显示偏移',
+  displayTimezoneOffsetDesc: '后端返回的文件时间为本地时间（无时区），按此偏移换算后显示在列表视图「修改日期」列。0 表示按浏览器本机时区',
   listView: '列表视图',
   gridView: '网格视图',
   reloadImage: '重新加载图片',

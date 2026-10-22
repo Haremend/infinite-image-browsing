@@ -684,6 +684,8 @@ You can specify which snapshot to restore to when starting IIB in the global set
 
   // ===== List View =====
   modifiedDate: 'Modified Date',
+  displayTimezoneOffset: 'Date Display Timezone Offset',
+  displayTimezoneOffsetDesc: 'File times returned by the backend are local time (no timezone). This offset is applied when showing the "Modified Date" column in the list view. 0 means use the browser locale timezone',
   listView: 'List View',
   gridView: 'Grid View',
   reloadImage: 'Reload image',

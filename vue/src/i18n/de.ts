@@ -423,6 +423,8 @@ export const de: Partial<IIBI18nMap> = {
 
   // ===== List View =====
   modifiedDate: 'Änderungsdatum',
+  displayTimezoneOffset: 'Zeitzonen-Offset für Datumsanzeige',
+  displayTimezoneOffsetDesc: 'Die vom Backend zurückgegebenen Datei-Zeiten sind lokale Zeit (ohne Zeitzonenangabe). Dieses Offset wird in der Spalte „Änderungsdatum" der Listenansicht angewendet. 0 bedeutet die Zeitzone des Browsers',
   listView: 'Listenansicht',
   gridView: 'Rasteransicht',
   reloadImage: 'Bild neu laden',

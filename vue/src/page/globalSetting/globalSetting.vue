@@ -276,6 +276,17 @@ onMounted(loadCacheInfo)
         <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
       </a-form-item>
 
+      <a-form-item :label="$t('displayTimezoneOffset')">
+        <a-input-number
+          v-model:value="globalStore.displayTimezoneOffset"
+          :min="-12"
+          :max="14"
+          :step="0.5"
+          style="width: 110px"
+        />
+        <span style="margin-left: 8px;color: #666;">{{ t('displayTimezoneOffsetDesc') }}</span>
+      </a-form-item>
+
       <a-form-item :label="$t('longPressOpenContextMenu')">
         <a-switch v-model:checked="globalStore.longPressOpenContextMenu" />
       </a-form-item>

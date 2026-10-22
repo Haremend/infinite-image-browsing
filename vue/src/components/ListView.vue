@@ -124,6 +124,20 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
+// ===== 修改日期列时区偏移 =====
+// 后端返回的文件修改时间是本地时间字符串（无时区，如 "2024-01-01 12:00:00"）。
+// 设置里 displayTimezoneOffset（小时）用于按目标时区换算后显示；0 表示原样显示。
+const offset = computed(() => Number(global.displayTimezoneOffset) || 0)
+
+const formatDisplayDate = (raw: string): string => {
+  if (!offset.value || !raw) return raw
+  const d = new Date(raw.replace(' ', 'T'))
+  if (isNaN(d.getTime())) return raw
+  const target = new Date(d.getTime() + offset.value * 3600 * 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())} ${pad(target.getHours())}:${pad(target.getMinutes())}:${pad(target.getSeconds())}`
+}
+
 // ===== 全屏预览相关 =====
 // AImage 组件未通过 defineExpose 暴露打开预览的方法，
 // 这里直接在双击的行内查找隐藏的 a-image 图片元素并模拟点击来打开全屏预览
@@ -328,7 +342,7 @@ const onDownloadMetadata = (file: FileNodeInfo, e: MouseEvent) => {
                 <download-outlined />
               </div>
             </div>
-            <div class="col-date">{{ file.date }}</div>
+            <div class="col-date">{{ formatDisplayDate(file.date) }}</div>
             <div class="col-size">{{ file.type === 'dir' ? '--' : formatFileSize(file.bytes) }}</div>
             <div class="col-actions" @click.stop>
               <!-- 点赞 -->

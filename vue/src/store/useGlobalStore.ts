@@ -240,7 +240,8 @@ export const presistKeys = [
   'showRecentInStartup',
   'showTiktokNavigator',
   'autoUpdateIndex',
-  'fullscreenMenuBlockVisibility'
+  'fullscreenMenuBlockVisibility',
+  'displayTimezoneOffset'
 ]
 
 function cellWidthMap(x: number): number {
@@ -496,6 +497,8 @@ export const useGlobalStore = defineStore(
       showRecentInStartup,
       autoUpdateIndex: ref(true),
       fullscreenMenuBlockVisibility,
+      /** 列表视图「修改日期」列的时区偏移（小时，后端返回本地时间字符串，无时区）。0 表示按本机时区 */
+      displayTimezoneOffset: ref(0),
       // Organize jobs
       activeOrganizeJobs,
       showOrganizePanel,

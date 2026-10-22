@@ -664,6 +664,8 @@ export const zhHant: Partial<IIBI18nMap> = {
 
   // ===== List View =====
   modifiedDate: '修改日期',
+  displayTimezoneOffset: '日期時區顯示偏移',
+  displayTimezoneOffsetDesc: '後端返回的文件時間為本地時間（無時區），按此偏移換算後顯示在列表視圖「修改日期」欄。0 表示按瀏覽器本機時區',
   listView: '列表檢視',
   gridView: '網格檢視',
   reloadImage: '重新載入圖片',
